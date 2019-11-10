@@ -24,17 +24,19 @@ FILE_FW=sonoff.bin
 SIZE_FLASH=1MB
 CMD=esptool
 
-# Read config from file.
-if [ -f ${script_dir}/flash_usb.config ]; then
-  echo "Read config from file..."
-  . ${script_dir}/flash_usb.config
-fi
+readFile() {
+  # Read config from file.
+  if [ -f ${script_dir}/flash_usb.config ]; then
+    echo "Read config from file..."
+    . ${script_dir}/flash_usb.config
+  fi
+}
 
 parse() {
 
   # Option strings.
-  SHORT=vu:f:s:c:
-  LONG=verbose,usb:,file:,size:,cmd:
+  SHORT=hvu:f:s:c:
+  LONG=help,verbose,usb:,file:,size:,cmd:
 
   # read the options.
   OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -64,12 +66,17 @@ parse() {
         CMD="$2"
         shift 2
         ;;
+      -h | --help )
+        help
+        exit 0
+        ;;
       -- )
         shift
         break
         ;;
       *)
         echo "Internal error!"
+        help
         exit 1
         ;;
     esac
@@ -77,8 +84,19 @@ parse() {
 
 }
 
-check() {
+help() {
+  echo -e "\nbash flash_usb.sh [opt1] [opt1] [...]"
+  echo "Options :"
+  echo -e " -c | --cmd <esptool_file>\t: Path to esptool script."
+  echo -e " -f | --file <bin_file>\t\t: Path to binary file."
+  echo -e " -h | --help\t\t\t: this help message."
+  echo -e " -s | --size <value>MB\t\t: Size of internal ROM."
+  echo -e " -u | --usb <usb_file>\t\t: Path to USB file."
+  echo -e "\neg. : bash flash_usb.sh --usb /dev/ttyUSB0 --file sonoff.bin"
+  echo -e "\nOR You can config all options in flash_usb.config file."
+}
 
+check() {
   # check variables.
   if [ ! -e "$USB" ]; then
     echo "Error: USB at ${USB} not found" >&2
@@ -98,7 +116,6 @@ check() {
 
 
 main() {
-
   echo -e "GET MAC (for filename)...\n"
   MAC=$($CMD -p $USB flash_id | grep -oE '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
   FILE="${script_dir}/logs/$MAC.txt"
@@ -121,6 +138,7 @@ main() {
   echo "====================================" >> $FILE
 }
 
+readFile
 parse "${@}"
 check
 main
