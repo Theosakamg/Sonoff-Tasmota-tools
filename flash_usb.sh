@@ -8,6 +8,7 @@
 #Usage           :bash flash_usb.sh --usb /dev/ttyUSB0 --file sonoff.bin
 #==============================================================================
 
+# Global options.
 set -o errexit   # abort on nonzero exitstatus
 set -o nounset   # abort on unbound variable
 set -o pipefail  # don't hide errors within pipes
@@ -17,12 +18,26 @@ readonly script_name=$(basename "${0}")
 readonly script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 IFS=$'\t\n'   # Split on newlines and tabs (but not on spaces)
 
-# set initial values.
+# Set initial values.
 VERBOSE=false
 USB=/dev/ttyUSB0
 FILE_FW=sonoff.bin
 SIZE_FLASH=1MB
 CMD=esptool
+
+# Internal functions
+
+help() {
+  echo -e "\nbash flash_usb.sh [opt1] [opt1] [...]"
+  echo "Options :"
+  echo -e " -c | --cmd <esptool_file>\t: Path to esptool script."
+  echo -e " -f | --file <bin_file>\t\t: Path to binary file."
+  echo -e " -h | --help\t\t\t: this help message."
+  echo -e " -s | --size <value>MB\t\t: Size of internal ROM."
+  echo -e " -u | --usb <usb_file>\t\t: Path to USB file."
+  echo -e "\neg. : bash flash_usb.sh --usb /dev/ttyUSB0 --file sonoff.bin"
+  echo -e "\nOR You can config all options in flash_usb.config file."
+}
 
 readFile() {
   # Read config from file.
@@ -84,18 +99,6 @@ parse() {
 
 }
 
-help() {
-  echo -e "\nbash flash_usb.sh [opt1] [opt1] [...]"
-  echo "Options :"
-  echo -e " -c | --cmd <esptool_file>\t: Path to esptool script."
-  echo -e " -f | --file <bin_file>\t\t: Path to binary file."
-  echo -e " -h | --help\t\t\t: this help message."
-  echo -e " -s | --size <value>MB\t\t: Size of internal ROM."
-  echo -e " -u | --usb <usb_file>\t\t: Path to USB file."
-  echo -e "\neg. : bash flash_usb.sh --usb /dev/ttyUSB0 --file sonoff.bin"
-  echo -e "\nOR You can config all options in flash_usb.config file."
-}
-
 check() {
   # check variables.
   if [ ! -e "$USB" ]; then
@@ -137,6 +140,8 @@ main() {
   echo "\ndone !\n"
   echo "====================================" >> $FILE
 }
+
+# Main script.
 
 readFile
 parse "${@}"
